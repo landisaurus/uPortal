@@ -731,6 +731,7 @@
     <cache name="AggregateEvents.org.jasig.portal.events.aggr.login.LoginAggregationImpl.Query" 
         eternal="false" maxElementsInMemory="500" overflowToDisk="false" diskPersistent="false"
         timeToIdleSeconds="0" timeToLiveSeconds="600" memoryStoreEvictionPolicy="LRU" statistics="true"/>
+        <!-- LAN - PUT STUFF HERE! -->
 
     <!--
      | Caches event session data, primarily used during aggregation 

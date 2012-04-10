@@ -41,6 +41,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Type;
 import org.jasig.portal.events.aggr.DateDimension;
 import org.jasig.portal.events.aggr.login.LoginAggregationImpl;
+import org.jasig.portal.events.aggr.popular.PopularPortletAggregationImpl;
 import org.joda.time.DateMidnight;
 import org.joda.time.LocalDate;
 
@@ -105,6 +106,13 @@ public class DateDimensionImpl implements DateDimension, Serializable {
     @SuppressWarnings("unused")
     @OneToMany(mappedBy="dateDimension", fetch=FetchType.LAZY)
     private Collection<LoginAggregationImpl> loginAggregations;
+    
+    /**
+     * NEVER used directly, simply needed for join queries
+     */
+    @SuppressWarnings("unused")
+    @OneToMany(mappedBy="dateDimension", fetch=FetchType.LAZY)
+    private Collection<PopularPortletAggregationImpl> popularPortletAggregations;
     
     @Transient
     private int hashCode = 0;

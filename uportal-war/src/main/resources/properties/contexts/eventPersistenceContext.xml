@@ -81,4 +81,6 @@
         <property name="dataSource" ref="AggrEventsDB" />
         <property name="persistenceUnitName" value="uPortalAggrEventsPersistence" />
     </bean>
+    
+    
 </beans>
