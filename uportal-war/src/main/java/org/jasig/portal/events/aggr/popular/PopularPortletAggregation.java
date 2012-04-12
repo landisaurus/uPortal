@@ -19,6 +19,8 @@
 
 package org.jasig.portal.events.aggr.popular;
 
+import java.util.List;
+
 import org.jasig.portal.events.aggr.BaseAggregation;
 import org.jasig.portal.events.aggr.groups.AggregatedGroupMapping;
 
@@ -43,4 +45,6 @@ public interface PopularPortletAggregation extends BaseAggregation {
     int getUniqueAddCount();
     
     int getCountByFName(String fName);
+
+    List<String> getUniqueFNames();
 }

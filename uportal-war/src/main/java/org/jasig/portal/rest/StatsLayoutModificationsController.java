@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
@@ -169,12 +170,42 @@ System.out.println("LAN - we have dates " + start.toString() + ", " + end.toStri
     public List<CountingTuple> convertToUserFacing(List<PopularPortletAggregation> query, int maxSize)
     {
         System.out.println("LAN - " + query.size() + " Is in the covert chamber");
-        List<CountingTuple> rslt=null;
+        List<CountingTuple> rslt=new ArrayList();
+        List<String> masterFNameList = new ArrayList();
         int i = 0;
         for (PopularPortletAggregation currentAggr : query)
         {
-            System.out.println(i + " is important.");
-            i++;
+            if (currentAggr != null) {
+                System.out.println(i + " is important. " + currentAggr.toString());
+                i++;
+                List<String> currentFNames = currentAggr.getUniqueFNames();
+                if (currentFNames.size() > 0)
+                {
+                    System.out.println ("LAN - size is greater than 0");
+                    for (String cFName : currentFNames)
+                    { 
+                        if (masterFNameList.contains(cFName))
+                        {
+                            System.out.println("LAN - it has the name " + cFName);
+                            for (CountingTuple currentTuple: rslt)
+                            {
+                                currentTuple.setCount(currentTuple.getCount()+currentAggr.getCountByFName(cFName));
+                            }
+                        } else
+                        {
+                            System.out.println("LAN - it does NOT have the name " + cFName);
+                            rslt.add(new CountingTuple(i, cFName , "Title: cFName", "Description", currentAggr.getCountByFName(cFName)));
+                            masterFNameList.add(cFName);
+                        }
+                        
+                    }
+                }
+                else
+                {
+                    System.out.println("LAN - the list isn't big enough");
+                }
+            } // this should be removed
+            else { System.out.println(" wait...   WTF, how is it null!!!"); }
         }
         if (query.size() > maxSize)
         {
@@ -224,7 +255,7 @@ System.out.println("LAN - we have dates " + start.toString() + ", " + end.toStri
         private final String portletFName;
         private final String portletTitle;
         private String portletDescription = "[no description available]";  // default
-        private final int count;
+        private int count;
         
         public CountingTuple(int id, String portletFName, String portletTitle, String portletDescription, int count) {
 
@@ -266,6 +297,11 @@ System.out.println("LAN - we have dates " + start.toString() + ", " + end.toStri
 
         public int getCount() {
             return count;
+        }
+        
+        public void setCount(int c)
+        {
+            count = c;
         }
 
         @Override

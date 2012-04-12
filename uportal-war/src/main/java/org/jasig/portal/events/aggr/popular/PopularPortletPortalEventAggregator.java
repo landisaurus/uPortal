@@ -67,14 +67,12 @@ public class PopularPortletPortalEventAggregator implements IPortalEventAggregat
             final TimeDimension timeDimension = intervalInfo.getTimeDimension();
             
             final Set<AggregatedGroupMapping> groupMappings = new LinkedHashSet<AggregatedGroupMapping>(eventSession.getGroupMappings());
-        System.out.println("LAN - in..  Agregate Events?" + interval.toString() + ", " + groupMappings.size());
             final Set<PopularPortletAggregationImpl> popularPortletAggregations = this.popularPortletAggregationDao.getPopularPortletAggregationsForInterval(dateDimension, timeDimension, interval);
             for (final PopularPortletAggregationImpl popularPortletAggregation : popularPortletAggregations) {
                 //Remove the aggregation from the group set to mark that it has been updated
                 groupMappings.remove(popularPortletAggregation.getAggregatedGroup());
                 updateAggregation(e, intervalInfo, popularPortletAggregation);
             }
-            System.out.println(" AND  " + !groupMappings.isEmpty());
             //Create any left over groups
             if (!groupMappings.isEmpty()) {
                 for (final AggregatedGroupMapping aggregatedGroup : groupMappings) {
@@ -88,11 +86,9 @@ public class PopularPortletPortalEventAggregator implements IPortalEventAggregat
     private void updateAggregation(PortletAddedToLayoutPortalEvent e, final AggregationIntervalInfo intervalInfo, final PopularPortletAggregationImpl popularPortletAggregation) {
         final String userName = e.getUserName();
         final String fName = e.getFname();
-        System.out.println("LAN - I AM UPDATING " + fName);
         final int duration = intervalInfo.getDurationTo(e.getTimestampAsDate());
         popularPortletAggregation.setDuration(duration);
         popularPortletAggregation.countPortletAdd(fName);
-        System.out.println("LAN - just checking " + popularPortletAggregation.getCountByFName(fName) + " VS " + popularPortletAggregation.getCountByFName("BOB" )) ;
     }
 
     @Transactional("aggrEvents")

@@ -86,6 +86,8 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         this.timeDimensionParameter = this.createParameterExpression(TimeDimension.class, "timeDimension");
         this.dateDimensionParameter = this.createParameterExpression(DateDimension.class, "dateDimension");
         this.intervalParameter = this.createParameterExpression(AggregationInterval.class, "interval");
+        this.aggregatedGroupParameter = this.createParameterExpression(AggregatedGroupMapping.class, "aggregatedGroup");
+        this.aggregatedGroupsParameter = this.createParameterExpression(Set.class, "aggregatedGroups");
         this.startDate = this.createParameterExpression(LocalDate.class, "startDate");
         this.endDate = this.createParameterExpression(LocalDate.class, "endDate");
         
@@ -118,7 +120,9 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
                 criteriaQuery.where(
                         cb.and(
                             cb.equal(root.get(PopularPortletAggregationImpl_.dateDimension), dateDimensionParameter),
-                            cb.equal(root.get(PopularPortletAggregationImpl_.timeDimension), timeDimensionParameter)
+                            cb.equal(root.get(PopularPortletAggregationImpl_.timeDimension), timeDimensionParameter),
+                            cb.equal(root.get(PopularPortletAggregationImpl_.interval), intervalParameter),
+                            cb.equal(root.get(PopularPortletAggregationImpl_.aggregatedGroup), aggregatedGroupParameter)
                         )
                     );
                 
@@ -138,7 +142,9 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
                 criteriaQuery.select(popularPortletAggrJoin);
                 criteriaQuery.where(
                         cb.and(
-                                cb.between(root.get(DateDimensionImpl_.date), startDate, endDate)
+                                cb.between(root.get(DateDimensionImpl_.date), startDate, endDate),
+                                cb.equal(popularPortletAggrJoin.get(PopularPortletAggregationImpl_.interval), intervalParameter),
+                                popularPortletAggrJoin.get(PopularPortletAggregationImpl_.aggregatedGroup).in(aggregatedGroupsParameter)
                         )
                 );
                 criteriaQuery.orderBy(cb.desc(root.get(DateDimensionImpl_.date)));
@@ -155,7 +161,6 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         query.setParameter(this.endDate, end.toLocalDate());
         query.setParameter(this.intervalParameter, interval);
         query.setParameter(this.aggregatedGroupsParameter, ImmutableSet.copyOf(aggregatedGroupMapping));
-        System.out.println("LAN - really...2");
         return new ArrayList<PopularPortletAggregation>(query.getResultList());
     }
     
@@ -164,9 +169,7 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         final TypedQuery<PopularPortletAggregationImpl> query = this.createQuery(findPopularPortletAggregationsByDateRangeQuery);
         query.setParameter(this.startDate, start.toLocalDate());
         query.setParameter(this.endDate, end.toLocalDate());
-        System.out.println("LAN - QUERY: " + this.startDate.toString() + " , " + start.toLocalDate().toString());
         List results = query.getResultList();
-        System.out.println("LAN - hmm... " + results.size()); 
         return new ArrayList<PopularPortletAggregation>(results);
     }
 
@@ -176,11 +179,9 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         final TypedQuery<PopularPortletAggregationImpl> query = this.createCachedQuery(this.findPopularPortletAggregationByDateTimeIntervalQuery);
         query.setParameter(this.dateDimensionParameter, dateDimension);
         query.setParameter(this.timeDimensionParameter, timeDimension);
-        //query.setParameter(this.intervalParameter, interval);
-        System.out.println("LAN - really...3");
+        query.setParameter(this.intervalParameter, interval);
         
         final List<PopularPortletAggregationImpl> results = query.getResultList();
-        System.out.println("LAN - QUERY: " + this.startDate.toString() + " , " + dateDimension.toString() + " AND our size is " + results.size());
         return new LinkedHashSet<PopularPortletAggregationImpl>(results);
     }
 
@@ -190,8 +191,8 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         query.setParameter(this.dateDimensionParameter, dateDimension);
         query.setParameter(this.timeDimensionParameter, timeDimension);
         query.setParameter(this.intervalParameter, interval);
+
         query.setParameter(this.aggregatedGroupParameter, aggregatedGroup);
-        System.out.println("LAN - really...4");
         final List<PopularPortletAggregationImpl> results = query.getResultList();
         return DataAccessUtils.uniqueResult(results);
     }
@@ -211,15 +212,4 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
     public void updatePopularPortletAggregation(PopularPortletAggregationImpl popularPortletAggregation) {
         this.entityManager.persist(popularPortletAggregation);
     }
-
-    /*@Override
-    public void updatePopularPortletReport(String fName)
-    {
-        if (this.uniqueFNames.add(fName)) {
-            this.uniquePortletFNameCount++;
-        }
-        this.addCount++;
-        int prevCount = this.addCountPerFName.get(fName);
-        this.addCountPerFName.put(fName, new Integer(prevCount+1));
-    }*/
 }

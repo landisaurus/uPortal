@@ -20,8 +20,10 @@
 package org.jasig.portal.events.aggr.popular;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,6 +44,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
+import javax.persistence.MapKeyColumn;
 
 import org.apache.commons.lang.Validate;
 import org.hibernate.annotations.Cache;
@@ -109,18 +112,14 @@ public class PopularPortletAggregationImpl implements PopularPortletAggregation,
     @Column(name = "ADD_COUNT", nullable = false)
     private int addCount;
     
-    @Column(name = "UP_PORTLET_FNAME_COUNT", nullable = false)
-    private int uniquePortletFNameCount;
     
     @ElementCollection(fetch=FetchType.EAGER)
     @JoinTable(
             name = "UP_PORTLET_ADD_EVENT_AGGREGATE_FNAMES",
-            joinColumns = @JoinColumn(name = "PORTLET_ADD_AGGR_ID")
+            joinColumns = {@JoinColumn(name = "PORTLET_ADD_COUNT") }
         )
-    private Set<String> uniqueFNames = new LinkedHashSet<String>();
-    
-    @ElementCollection
-    private Map<String, Integer> countPerFName = new HashMap<String, Integer>();
+    @MapKeyColumn(name="UNIQUE_FNAMES", nullable = false)
+    private final Map<String, Integer> uniqueFNames = new HashMap<String, Integer>();
     
     
     @SuppressWarnings("unused")
@@ -178,12 +177,19 @@ public class PopularPortletAggregationImpl implements PopularPortletAggregation,
 
     @Override
     public int getUniqueAddCount() {
-        return this.uniquePortletFNameCount;
+        return this.uniqueFNames.keySet().size();
     }
     
+    @Override
     public int getCountByFName(String fName)
-    {// TODO LAN - fix.  make return real count
-        return uniquePortletFNameCount;
+    {
+        return this.uniqueFNames.get(fName);
+    }
+    
+    @Override
+    public List<String> getUniqueFNames()
+    {
+        return new ArrayList(this.uniqueFNames.keySet());
     }
     
     
@@ -196,22 +202,14 @@ public class PopularPortletAggregationImpl implements PopularPortletAggregation,
     void countPortletAdd(String fName) {
         checkState();
         
-        if (this.uniqueFNames.add(fName)) {
-            this.uniquePortletFNameCount++;
-        }
-        System.out.println("LAN - total fnames = " + uniqueFNames.size());
         this.addCount++;
-        System.out.println("LAN - what is about to happen " + fName );
-        if (this.countPerFName != null)
+        int prevCount = 0;
+        if (this.uniqueFNames.containsKey(fName))
         {
-            System.out.println(countPerFName.toString() +" isn't null... what's the problem?" + countPerFName.size());
-            
+            prevCount = this.uniqueFNames.get(fName);
         }
-        int prevCount = this.countPerFName.get(fName);
-        System.out.println(" AND nothing..." + prevCount);
-        this.countPerFName.put(fName, new Integer(prevCount+1));
+        this.uniqueFNames.put(fName, new Integer(prevCount+1));
         
-        System.out.println("LAN - totals " + countPerFName.toString());
     }
     
     
@@ -223,7 +221,7 @@ public class PopularPortletAggregationImpl implements PopularPortletAggregation,
     
     void intervalComplete(int duration) {
         this.duration = duration;
-        this.uniqueFNames.clear();
+        //this.uniqueFNames.clear();
     }
 
     @Override
@@ -273,6 +271,6 @@ public class PopularPortletAggregationImpl implements PopularPortletAggregation,
     public String toString() {
         return "PopularPortletAggregationImpl [timeDimension=" + timeDimension + ", dateDimension=" + dateDimension
                 + ", interval=" + interval + ", groupName=" + aggregatedGroup + ", duration=" + duration + ", addCount="
-                + addCount + ", uniqueFNameCount=" + uniquePortletFNameCount + "]";
+                + addCount + ", uniqueFNameCount=" + uniqueFNames.size() + "]";
     }
 }
