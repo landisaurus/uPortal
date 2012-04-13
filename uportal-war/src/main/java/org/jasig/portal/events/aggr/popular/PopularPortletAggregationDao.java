@@ -29,12 +29,6 @@ import org.jasig.portal.events.aggr.TimeDimension;
 import org.jasig.portal.events.aggr.groups.AggregatedGroupMapping;
 import org.joda.time.DateMidnight;
 
-/**
- * DAO used to query information about login aggregates: Total Logins and Unique Logins per date,time,interval,group
- * 
- * @author Eric Dalquist
- * @version $Revision$
- */
 public interface PopularPortletAggregationDao<T extends PopularPortletAggregation> {
     
     /**
@@ -42,11 +36,6 @@ public interface PopularPortletAggregationDao<T extends PopularPortletAggregatio
      */
     List<PopularPortletAggregation> getPopularPortletAggregations(DateMidnight start, DateMidnight end, AggregationInterval interval, AggregatedGroupMapping... aggregatedGroupMapping);
     
-    /**
-     * login aggregations in a date range.
-     */
-    List<PopularPortletAggregation> getPopularPortletAggregations(DateMidnight start, DateMidnight end);
-
     /**
      * @return All portlet add to layout Event aggregations for the date, time and interval
      */

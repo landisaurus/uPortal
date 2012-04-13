@@ -50,10 +50,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * @author Eric Dalquist
- * @version $Revision$
- */
 @Repository
 public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements PopularPortletAggregationPrivateDao {
 
@@ -161,18 +157,9 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         query.setParameter(this.endDate, end.toLocalDate());
         query.setParameter(this.intervalParameter, interval);
         query.setParameter(this.aggregatedGroupsParameter, ImmutableSet.copyOf(aggregatedGroupMapping));
-        return new ArrayList<PopularPortletAggregation>(query.getResultList());
+        List<PopularPortletAggregation> rslt = new ArrayList<PopularPortletAggregation>(query.getResultList());
+        return rslt;
     }
-    
-    @Override
-    public List<PopularPortletAggregation> getPopularPortletAggregations(DateMidnight start, DateMidnight end) {
-        final TypedQuery<PopularPortletAggregationImpl> query = this.createQuery(findPopularPortletAggregationsByDateRangeQuery);
-        query.setParameter(this.startDate, start.toLocalDate());
-        query.setParameter(this.endDate, end.toLocalDate());
-        List results = query.getResultList();
-        return new ArrayList<PopularPortletAggregation>(results);
-    }
-
     
     @Override
     public Set<PopularPortletAggregationImpl> getPopularPortletAggregationsForInterval(DateDimension dateDimension, TimeDimension timeDimension, AggregationInterval interval) {
@@ -180,8 +167,8 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
         query.setParameter(this.dateDimensionParameter, dateDimension);
         query.setParameter(this.timeDimensionParameter, timeDimension);
         query.setParameter(this.intervalParameter, interval);
-        
         final List<PopularPortletAggregationImpl> results = query.getResultList();
+        
         return new LinkedHashSet<PopularPortletAggregationImpl>(results);
     }
 
@@ -200,6 +187,7 @@ public class SimpleJpaPopularPortletAggregationDao extends BaseJpaDao implements
     @Transactional("aggrEvents")
     @Override
     public PopularPortletAggregationImpl createPopularPortletAggregation(DateDimension dateDimension, TimeDimension timeDimension, AggregationInterval interval, AggregatedGroupMapping aggregatedGroup) {
+        
         final PopularPortletAggregationImpl popularPortletAggregation = new PopularPortletAggregationImpl(timeDimension, dateDimension, interval, aggregatedGroup);
         
         this.entityManager.persist(popularPortletAggregation);

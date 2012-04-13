@@ -60,6 +60,9 @@
         <constructor-arg ref="PortalDb" />
     </bean>
     <bean id="popularPortletAggregationDao" class="org.jasig.portal.events.aggr.popular.SimpleJpaPopularPortletAggregationDao" />
+    <bean id="aggregatedGroupLookupDao" class="org.jasig.portal.events.aggr.groups.JpaAggregatedGroupLookupDao" />
+    
+    
     <!-- 
      | DataSource used to store aggregated portal event data, wrapper is used instead of alias so that Spring treats each
      | DataSource as unique.

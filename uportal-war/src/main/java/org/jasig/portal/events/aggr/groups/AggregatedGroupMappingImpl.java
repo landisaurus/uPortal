@@ -78,7 +78,7 @@ public class AggregatedGroupMappingImpl implements AggregatedGroupMapping, Seria
         this.groupName = null;
     }
     
-    AggregatedGroupMappingImpl(String groupService, String groupName) {
+    public AggregatedGroupMappingImpl(String groupService, String groupName) {
         this.id = -1;
         this.groupService = groupService;
         this.groupName = groupName;

@@ -58,10 +58,6 @@ import org.jasig.portal.events.aggr.dao.jpa.TimeDimensionImpl;
 import org.jasig.portal.events.aggr.groups.AggregatedGroupMapping;
 import org.jasig.portal.events.aggr.groups.AggregatedGroupMappingImpl;
 
-/**
- * @author Eric Dalquist
- * @version $Revision$
- */
 @Entity
 @Table(name = "UP_PORTLET_ADD_EVENT_AGGREGATE")
 @Inheritance(strategy=InheritanceType.JOINED)

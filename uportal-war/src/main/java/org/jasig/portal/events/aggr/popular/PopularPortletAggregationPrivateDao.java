@@ -24,12 +24,6 @@ import org.jasig.portal.events.aggr.AggregationInterval;
 import org.jasig.portal.events.aggr.TimeDimension;
 import org.jasig.portal.events.aggr.groups.AggregatedGroupMapping;
 
-/**
- * PopularPortlet Aggregation DAO used internally to create and update PopularPortlet aggregations
- * 
- * @author Eric Dalquist
- * @version $Revision$
- */
 interface PopularPortletAggregationPrivateDao extends PopularPortletAggregationDao<PopularPortletAggregationImpl> {
 
     @Override

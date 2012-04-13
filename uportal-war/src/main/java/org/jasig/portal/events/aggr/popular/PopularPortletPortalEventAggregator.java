@@ -39,8 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Event aggregator that uses {@link PopularPortletAggregationPrivateDao} to aggregate popularPortlet events 
  * 
- * @author Eric Dalquist
- * @version $Revision$
  */
 @Service
 public class PopularPortletPortalEventAggregator implements IPortalEventAggregator<PortletAddedToLayoutPortalEvent> {

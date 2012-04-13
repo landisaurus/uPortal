@@ -42,6 +42,12 @@ import javax.sql.DataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jasig.portal.EntityIdentifier;
+import org.jasig.portal.events.aggr.AggregationInterval;
+import org.jasig.portal.events.aggr.dao.DateDimensionDao;
+import org.jasig.portal.events.aggr.dao.TimeDimensionDao;
+import org.jasig.portal.events.aggr.groups.AggregatedGroupLookupDao;
+import org.jasig.portal.events.aggr.groups.AggregatedGroupMapping;
+import org.jasig.portal.events.aggr.groups.AggregatedGroupMappingImpl;
 import org.jasig.portal.events.aggr.popular.PopularPortletAggregation;
 import org.jasig.portal.events.aggr.popular.PopularPortletAggregationDao;
 import org.jasig.portal.security.AdminEvaluator;
@@ -59,6 +65,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
+import org.joda.time.LocalTime;
 import org.joda.time.Duration;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormat;
@@ -73,7 +81,7 @@ import org.joda.time.format.DateTimeFormat;
  *   <li>fromDate: Date (inclusive) from which to count backwards; default is today</li>
  * </ul>
  *
- * @author Drew Wills, drew@unicon.net
+ *
  */
 @Controller
 public class StatsLayoutModificationsController implements InitializingBean {
@@ -87,6 +95,7 @@ public class StatsLayoutModificationsController implements InitializingBean {
     private final DateTimeFormatter format = DateTimeFormat.shortDate();
     private CacheFactory cacheFactory;
     private PopularPortletAggregationDao eventAggr;
+    private AggregatedGroupLookupDao aggregatedGroupLookupDao;
     private final Log log = LogFactory.getLog(getClass());
     
     public void setMaxDays(int maxDays) {
@@ -102,6 +111,12 @@ public class StatsLayoutModificationsController implements InitializingBean {
     @Autowired
     public void setCacheFactory(CacheFactory cacheFactory) {
         this.cacheFactory = cacheFactory;
+    }
+    
+    @Autowired
+    public void setAggregatedGroupLookupDao(AggregatedGroupLookupDao aggregatedGroupLookupDao)
+    {
+        this.aggregatedGroupLookupDao = aggregatedGroupLookupDao;
     }
 
     @Override
@@ -126,8 +141,9 @@ System.out.println("it has begun");
             }
         }
         
-        DateMidnight end = DateMidnight.now();
-        DateMidnight start = end.minus(Duration.standardDays(days));
+        DateTime date = DateTime.now();
+        DateMidnight dateMidnight = date.toDateMidnight();
+        LocalTime timeZone = date.toLocalTime();
 
         if (req.getParameter("fromDate") != null) {
             String fromDateParam = req.getParameter("fromDate").trim();
@@ -136,7 +152,7 @@ System.out.println("it has begun");
             if (datePattern.matcher(fromDateParam).matches()) {
                 try {
                     DateMidnight beforeThisTime = new DateMidnight(format.parseDateTime(fromDateParam));
-                    end = beforeThisTime;  // if it failed to formatter, it should already be a caught exception. 
+                    dateMidnight = beforeThisTime;  // if it failed to formatter, it should already be a caught exception. 
                 } catch (IllegalArgumentException pe) {
                     // Passing a bad date is ok, it just results in the default
                     if (log.isInfoEnabled()) {
@@ -147,7 +163,7 @@ System.out.println("it has begun");
             }
         }
 
-        // Be certain days is within prescribed limits
+        // Be certain days is within prescribed limit 
         if (days < MIN_DAYS) {
             days = MIN_DAYS;
         } else if (days > maxDays) {
@@ -155,9 +171,13 @@ System.out.println("it has begun");
         }
         
         int sizeLimit = 100;// LAN - move this to prefreences
-System.out.println("LAN - we have dates " + start.toString() + ", " + end.toString());
-        List<PopularPortletAggregation> fetchedData = eventAggr.getPopularPortletAggregations(start, end);
-        System.out.println("LAN - " + fetchedData.size() + " is size.  Prepare to convert.");
+        AggregatedGroupMapping groupA = aggregatedGroupLookupDao.getGroupMapping("Everyone", "local");
+        if (groupA == null)
+        {
+            groupA = new AggregatedGroupMappingImpl("Everyone", "local");
+        }
+        List<PopularPortletAggregation> fetchedData = eventAggr.getPopularPortletAggregations(dateMidnight.monthOfYear().roundFloorCopy(), dateMidnight.monthOfYear().roundCeilingCopy(), AggregationInterval.FIVE_MINUTE,
+                groupA) ;
         List<CountingTuple> completeList = convertToUserFacing(fetchedData, sizeLimit);
 
         //IPerson user = personManager.getPerson(req);
@@ -169,31 +189,27 @@ System.out.println("LAN - we have dates " + start.toString() + ", " + end.toStri
     
     public List<CountingTuple> convertToUserFacing(List<PopularPortletAggregation> query, int maxSize)
     {
-        System.out.println("LAN - " + query.size() + " Is in the covert chamber");
+        //System.out.println("LAN - " + query.size() + " Is in the covert chamber");
         List<CountingTuple> rslt=new ArrayList();
         List<String> masterFNameList = new ArrayList();
         int i = 0;
         for (PopularPortletAggregation currentAggr : query)
         {
             if (currentAggr != null) {
-                System.out.println(i + " is important. " + currentAggr.toString());
                 i++;
                 List<String> currentFNames = currentAggr.getUniqueFNames();
                 if (currentFNames.size() > 0)
                 {
-                    System.out.println ("LAN - size is greater than 0");
                     for (String cFName : currentFNames)
                     { 
                         if (masterFNameList.contains(cFName))
                         {
-                            System.out.println("LAN - it has the name " + cFName);
                             for (CountingTuple currentTuple: rslt)
                             {
                                 currentTuple.setCount(currentTuple.getCount()+currentAggr.getCountByFName(cFName));
                             }
                         } else
                         {
-                            System.out.println("LAN - it does NOT have the name " + cFName);
                             rslt.add(new CountingTuple(i, cFName , "Title: cFName", "Description", currentAggr.getCountByFName(cFName)));
                             masterFNameList.add(cFName);
                         }
@@ -202,14 +218,13 @@ System.out.println("LAN - we have dates " + start.toString() + ", " + end.toStri
                 }
                 else
                 {
-                    System.out.println("LAN - the list isn't big enough");
                 }
             } // this should be removed
-            else { System.out.println(" wait...   WTF, how is it null!!!"); }
         }
         if (query.size() > maxSize)
         {
             System.out.println("REDUCING SIZE NEEDED ");
+            query = query.subList(0, maxSize);
         }
         return rslt;
     }

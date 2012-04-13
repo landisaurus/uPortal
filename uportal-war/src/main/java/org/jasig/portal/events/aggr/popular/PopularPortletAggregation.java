@@ -24,10 +24,6 @@ import java.util.List;
 import org.jasig.portal.events.aggr.BaseAggregation;
 import org.jasig.portal.events.aggr.groups.AggregatedGroupMapping;
 
-/**
- * @author Eric Dalquist
- * @version $Revision$
- */
 public interface PopularPortletAggregation extends BaseAggregation {
     /**
      * @return The group this aggregation is for, null if it is for all users
